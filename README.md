@@ -30,4 +30,5 @@ Hints:
 -Ask about primary key in create table and check for it in the insert into table
 
 The Bonus:
-- Make the App to accept SQL Code or  Use GUI instead of the above menu based 
+- Make the App to accept SQL Code or  Use GUI instead of the above menu based.
+
