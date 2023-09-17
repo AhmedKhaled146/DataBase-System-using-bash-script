@@ -1,6 +1,8 @@
 # DataBase-System-using-bash-script
 The Project aim to develop DBMS, that will enable users to store and retrieve the data from Hard-disk.
 
+ITI Shell project with my friend @ayman farag
+
 
 Bash Shell Script Database Management System (DBMS):
 
