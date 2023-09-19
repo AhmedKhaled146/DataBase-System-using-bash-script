@@ -26,7 +26,7 @@ then
 
             if [[ ${colTypes[$i]} = "i" ]] && ! [[ ${input[$i]} =~ ^[0-9]+$ ]]
             then
-                echo "!Error: value ${input[$i]} is not a valid integer"
+                echo "#### value ${input[$i]} is not a valid integer"
                 exit
             fi
         done
@@ -35,7 +35,7 @@ then
         if [ `awk -F : -v primaryKeyVal=$primaryKeyValue 'BEGIN{ found="false"; }
             { if( primaryKeyVal == $1) found="true" ;} END{ print found;}' ./Tables/$tbName` = "true"  ]
         then
-            echo "!Error: Primary key must be unique"
+            echo "#### Primary key must be unique"
             exit
         fi
 
@@ -53,10 +53,10 @@ then
 
 
     else
-        echo "!Error: invalid input"
+        echo "#### invalid input"
     fi
     
 
 else
-    echo "!Error: the table does not exist or is corrupted"
+    echo "#### the table does not exist or is corrupted"
 fi

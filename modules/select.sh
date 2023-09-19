@@ -44,9 +44,9 @@ then
 		}
 	 	} END{ printf "\n" }' "./Tables/$tbName"
 	else
-		echo "!Error: Row not found." 
+		echo "#### Row not found." 
 	fi
 	
 else
-	echo "!Error: no table named \"$tbName\" in the current database"
+	echo "#### no table named \"$tbName\" in the current database"
 fi
