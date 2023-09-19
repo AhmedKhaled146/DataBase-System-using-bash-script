@@ -1,32 +1,52 @@
-#!/usr/bin/bash
+#!/bin/bash
 
 read -p "Enter the name of the table: " tbName
+if [ -f "./Tables/$tbName" ]
+then
+	## Get the primary key column number
+	pkColNo=`awk -F : '{ if( $3 == "p" ) print NR; }' "./Metadata/$tbName"`
+	
+	read -p "Enter the value for the primary column or type \"ALL\" for all data listing: " pkValue
+	
+	## Check if the given value exists in table
+	rowNo=`awk -v pkCol=$pkColNo -v pkVal=$pkValue -F : '
+		BEGIN{rn=-1}
+		{ if( $pkCol == pkVal ) rn = NR }
+		END{ print rn }' "./Tables/$tbName"
+		`
+		
+	## If the row = * then return all rows in a table in a nice format
+	if [ ${pkValue^^} = "ALL" ]
+	then
+		awk -F : '{printf "%s(%s,%s) %-7s" ,$1,$2,$3, "" }END{printf "\n"}' "./Metadata/$tbName"
+		awk -F : -v rowNo=$rowNo ' 
+		{ for(i = 1 ; i <= NF ; i++){
+			printf "  %s %-10s", $i , "";
+			}
+		printf "\n"
+	 	} END{ printf "\n" }' "./Tables/$tbName"
+	 	exit
+	fi
+	
+	
+	## If the row exists print its data in a nice format otherwise return an error
+	if [ $rowNo != "-1" ]
+	then
 
-if [ -f "./Tables/$tbName" ]; then
-    # Get the primary key column number
-    pkColNo=$(cut -d: -f4 "./Metadata/$tbName" | grep -n -w "p" | cut -d: -f1)
-
-    read -p "Enter the value for the primary column or type \"ALL\" for all data listing: " pkValue
-
-    # Check if the given value exists in the table
-    rowNo=$(cut -d: -f$pkColNo "./Tables/$tbName" | grep -n -w "$pkValue" | cut -d: -f1)
-
-    # If the user wants to see all rows, print metadata and all data
-    if [ "${pkValue^^}" = "ALL" ]; then
-        cut -d: -f1 "./Metadata/$tbName" | tr ':' ' ' | xargs printf "%-20s %-20s %-20s %-20s\n"
-        cut -d: -f1,2,3,4 "./Tables/$tbName" | tr ':' ' ' | xargs printf "%-20s %-20s %-20s %-20s\n"
-        exit
-    fi
-
-    # If the row exists, print specific columns and their values
-    if [ "$rowNo" != "" ]; then
-        #cut -d: -f1,2,3,4 "./Metadata/$tbName" | tr ':' ' ' | xargs printf "%-20s %-10s %-10s %-10s\n"
-        cut -d: -f1,2,3,4 "./Tables/$tbName" | sed -n "${rowNo}p" | tr ':' ' ' | xargs printf "%-20s %-10s %-10s %-10s\n"
-    else
-        echo "#### Row not found."
-    fi
-
+		awk -F : '{printf "%s(%s,%s) %-7s" ,$1,$2,$3, "" }END{printf "\n"}' "./Metadata/$tbName"
+		awk -F : -v rowNo=$rowNo ' 
+		{ 
+		if( NR == rowNo ){
+			for(i = 1 ; i <= NF ; i++){
+				printf "  %s %-10s", $i , "";
+				}
+			printf "\n"
+		}
+	 	} END{ printf "\n" }' "./Tables/$tbName"
+	else
+		echo "!Error: Row not found." 
+	fi
+	
 else
-    echo "#### no table named \"$tbName\" in the current database"
+	echo "!Error: no table named \"$tbName\" in the current database"
 fi
-

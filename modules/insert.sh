@@ -1,51 +1,62 @@
-#!/usr/bin/bash
+#!/bin/bash
 
 read -p "Enter Table Name: " tbName
 
-if [ "$tbName" ] && [ -f "./Tables/$tbName" ] && [ -f "./Metadata/$tbName" ]; then
-    # Get the data from the table and then convert it to an array
-    colNames=($(cut -d: -f1 "./Metadata/$tbName"))
-    colTypes=($(cut -d: -f2 "./Metadata/$tbName"))
-    colPK=($(cut -d: -f3 "./Metadata/$tbName"))
+if [ "$tbName" ] && [ -f "./Tables/$tbName" ] && [ -f "./Metadata/$tbName" ] 
+then
+    ## Get the data from the table and then convert it to an array
+    colNames=($(awk -F: '{print $1}' ./Metadata/"$tbName"))
+    colTypes=($(awk -F: '{print $2}' ./Metadata/"$tbName"))
+    colPK=($(awk -F: '{print $3}' ./Metadata/"$tbName"))
+            
+    echo "Enter the values of["${colNames[*]}"] respectively"
+    read  -a input	
 
-    echo "Enter the values of ["${colNames[*]}"] respectively"
-    read -a input
+    ## if input exists and the number of columns is the same as in the table
+    if [[ "${input[@]}" ]] && [[ ${#input[@]} -eq "${#colNames[@]}" ]]
+    then			
 
-    # if input exists and the number of columns is the same as in the table
-    if [[ "${input[@]}" ]] && [[ ${#input[@]} -eq "${#colNames[@]}" ]]; then
-        primaryKeyValue=""
-
-        # check if the column types match the data; if not, return to the main while loop
-        for i in ${!input[@]}; do
-            if [ "${colPK[$i]}" = "p" ]; then
-                primaryKeyValue="${input[$i]}"
+        ## check if the column types matches the data if not then will return to the main while loop
+        for i in ${!input[@]}
+        do	
+            if [ ${colPK[$i]} = "p" ]
+            then
+                primaryKeyValue=${input[$i]}
             fi
 
-            if [[ "${colTypes[$i]}" = "i" ]] && ! [[ "${input[$i]}" =~ ^[0-9]+$ ]]; then
-                echo "#### value ${input[$i]} is not a valid integer"
+            if [[ ${colTypes[$i]} = "i" ]] && ! [[ ${input[$i]} =~ ^[0-9]+$ ]]
+            then
+                echo "!Error: value ${input[$i]} is not a valid integer"
                 exit
             fi
         done
 
-        # check for the primary key constraint (unique)
-        if grep -q "^${primaryKeyValue}:" "./Tables/$tbName"; then
-            echo "#### Primary key must be unique"
+        ## check for the primary key constrains[unique]
+        if [ `awk -F : -v primaryKeyVal=$primaryKeyValue 'BEGIN{ found="false"; }
+            { if( primaryKeyVal == $1) found="true" ;} END{ print found;}' ./Tables/$tbName` = "true"  ]
+        then
+            echo "!Error: Primary key must be unique"
             exit
         fi
 
-        for i in ${!input[@]}; do
-            # if not the last line, then print element + delimiter
-            if (( $i < ${#input[@]} - 1 )); then
+        for i in ${!input[@]}
+        do
+            ## if not the last line then print element + delimiter
+            if (( $i < ${#input[@]}-1 ))
+            then
                 echo -n "${input[$i]}:" >> "./Tables/$tbName"
             else
-                # last line, print element + newline
+                ## last line print element + \n
                 echo "${input[$i]}" >> "./Tables/$tbName"
             fi
-        done
-    else
-        echo "#### invalid input"
-    fi
-else
-    echo "#### the table does not exist or is corrupted"
-fi
+        done	
 
+
+    else
+        echo "!Error: invalid input"
+    fi
+    
+
+else
+    echo "!Error: the table does not exist or is corrupted"
+fi
